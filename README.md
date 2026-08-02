@@ -38,7 +38,9 @@ curl localhost:8080/metrics
 | ---------------- | -------------------------------------------------------------------------------- |
 | `make precommit` | `install format test check` — run before every commit                            |
 | `make test`      | `node --test` (built-in runner, no test framework dependency)                    |
-| `make check`     | eslint + prettier verification                                                   |
+| `make check`     | eslint + prettier + `npm audit` + trivy                                          |
+| `make audit`     | npm advisory database, fails on high/critical                                    |
+| `make trivy`     | filesystem scan: dependency vulns + secret detection                             |
 | `make format`    | rewrite with prettier, autofix eslint                                            |
 | `make build`     | Docker build for `linux/amd64`, tagged `$(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH)` |
 | `make upload`    | push that tag                                                                    |
@@ -84,6 +86,16 @@ The Dockerfile `ENTRYPOINT`s `node` directly rather than going through `npm`, so
 | `BUILD_GIT_VERSION` / `BUILD_GIT_COMMIT` / `BUILD_DATE` | —         | Injected at image build, exposed on `/version` |
 
 `example.env` also carries `DOCKER_REGISTRY` and `CLUSTER_CONTEXT` for the build and deploy targets.
+
+## Security gates
+
+`make check` runs `npm audit` and `trivy fs` (vulnerabilities **and** secrets), mirroring go-skeleton. Trivy reads `package-lock.json` directly, so Node dependencies are covered by two independent databases.
+
+`npm audit` is pinned to `--audit-level=high` on purpose: moderate findings in dev-only transitive dependencies would otherwise block every commit for something never reachable at runtime. Raise it if a repo warrants stricter.
+
+`osv-scanner` is **not** included, unlike go-skeleton — it would pull a Go toolchain into a Node repo to add a third advisory database over ground trivy already covers. Add it if a project needs OSV specifically.
+
+Ignores live in `.trivyignore`, one ID per line with a reason. An entry without a reason is a silent risk.
 
 ## Deliberately not included
 
