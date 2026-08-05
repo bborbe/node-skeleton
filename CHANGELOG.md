@@ -1,5 +1,18 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+Please choose versions by [Semantic Versioning](http://semver.org/).
+
+- MAJOR version when you make incompatible API changes,
+- MINOR version when you add functionality in a backwards-compatible manner, and
+- PATCH version when you make backwards-compatible bug fixes.
+
+## Unreleased
+
+- docs: Add `CLAUDE.md` — coding-guideline pointers, the non-obvious invariants behind the shutdown/health/metrics code, and the propagation warning that every new service inherits from this repo
+- fix: Add the canonical Semantic Versioning preamble to `CHANGELOG.md`, which was missing entirely
+
 ## v0.0.1
 
 - Initial commit
