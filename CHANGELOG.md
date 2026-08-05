@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- docs: Add `CLAUDE.md` — coding-guideline pointers, the non-obvious invariants behind the shutdown/health/metrics code, and the propagation warning that every new service inherits from this repo
+
 ## v0.0.1
 
 - Initial commit
