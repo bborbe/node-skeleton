@@ -1,9 +1,21 @@
 #!/usr/bin/env node
 'use strict';
 
-const config = require('./config');
-const log = require('./log');
-const { createApp } = require('./server');
+import type { Config } from './config';
+import type { Logger } from './log';
+import type { CreateApp } from './server';
+
+const config: Config = require('./config.ts');
+const log: Logger = require('./log.ts');
+const { createApp }: { createApp: CreateApp } = require('./server.ts');
+
+// Fail fast and loudly: a service that boots with bad configuration and dies
+// on its first real request is worse than one that refuses to start.
+const problems = config.check();
+if (problems.length > 0) {
+  for (const problem of problems) log.error('invalid configuration', { problem });
+  process.exit(1);
+}
 
 // Flipped false on SIGTERM so /readiness fails BEFORE the server stops
 // accepting. That ordering is the whole point: Kubernetes needs a moment to
@@ -21,7 +33,7 @@ const server = app.listen(config.port, config.host, () => {
   });
 });
 
-function shutdown(signal) {
+function shutdown(signal: string): void {
   log.info('shutting down', { signal });
   ready = false; // fail readiness first, keep serving in-flight traffic
 

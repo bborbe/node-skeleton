@@ -51,11 +51,11 @@ curl localhost:8080/metrics
 ## Layout
 
 ```
-src/index.js            entrypoint: listen, signals, graceful shutdown
-src/server.js           express app, metrics middleware, error handling
-src/config.js           env -> config, validated at startup
-src/log.js              JSON-line logger
-src/handlers/health.js  /healthz, /readiness, /version
+src/index.ts            entrypoint: listen, signals, graceful shutdown
+src/server.ts           express app, metrics middleware, error handling
+src/config.ts           env -> config, validated at startup
+src/log.ts              JSON-line logger
+src/handlers/health.ts  /healthz, /readiness, /version
 test/                   node:test, no framework
 k8s/                    deployment + service, applied by `make apply`
 ```

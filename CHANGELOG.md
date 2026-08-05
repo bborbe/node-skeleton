@@ -10,6 +10,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- feat: Convert the skeleton from CommonJS JavaScript to CommonJS TypeScript — strict `tsconfig.json` (`noUncheckedIndexedAccess`), a `typecheck` target (`tsc --noEmit`) wired into `make check`, erasable-syntax-only sources so `node src/index.ts` runs with no build step, and startup-validated config (`config.check()`) instead of a type assertion
 - docs: Add `CLAUDE.md` — coding-guideline pointers, the non-obvious invariants behind the shutdown/health/metrics code, and the propagation warning that every new service inherits from this repo
 - fix: Add the canonical Semantic Versioning preamble to `CHANGELOG.md`, which was missing entirely
 

@@ -1,9 +1,12 @@
 'use strict';
 
-const express = require('express');
-const client = require('prom-client');
-const { healthRouter } = require('./handlers/health');
-const log = require('./log');
+import type { HealthRouter } from './handlers/health';
+import type { Logger } from './log';
+
+const express: typeof import('express') = require('express');
+const client: typeof import('prom-client') = require('prom-client');
+const { healthRouter }: { healthRouter: HealthRouter } = require('./handlers/health.ts');
+const log: Logger = require('./log.ts');
 
 const registry = new client.Registry();
 client.collectDefaultMetrics({ register: registry });
@@ -21,6 +24,12 @@ const httpDuration = new client.Histogram({
   registers: [registry],
 });
 
+export interface CreateAppOptions {
+  isReady?: () => boolean;
+}
+
+export type CreateApp = (options?: CreateAppOptions) => import('express').Express;
+
 /**
  * Build the app.
  *
@@ -28,7 +37,7 @@ const httpDuration = new client.Histogram({
  * readiness state directly, and so real services can hang it off whatever
  * dependency actually gates traffic.
  */
-function createApp({ isReady } = {}) {
+function createApp({ isReady }: CreateAppOptions = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
@@ -55,11 +64,17 @@ function createApp({ isReady } = {}) {
   app.use((_req, res) => res.status(404).json({ error: 'not found' }));
 
   // Four args — Express only treats this as an error handler with the arity.
-
-  app.use((err, _req, res, _next) => {
-    log.error('unhandled request error', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: 'internal server error' });
-  });
+  app.use(
+    (
+      err: Error,
+      _req: import('express').Request,
+      res: import('express').Response,
+      _next: import('express').NextFunction,
+    ) => {
+      log.error('unhandled request error', { error: err.message, stack: err.stack });
+      res.status(500).json({ error: 'internal server error' });
+    },
+  );
 
   return app;
 }

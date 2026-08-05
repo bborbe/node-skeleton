@@ -42,6 +42,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # No npm wrapper: exec'ing node directly makes PID 1 the process that actually
 # receives SIGTERM, which is what makes graceful shutdown work in Kubernetes.
-ENTRYPOINT ["node", "src/index.js"]
+# Node runs .ts directly (type stripping) — no compile step, no dist/ output.
+ENTRYPOINT ["node", "src/index.ts"]
 
 EXPOSE 8080

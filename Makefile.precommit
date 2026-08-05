@@ -19,9 +19,16 @@ lint:
 formatcheck:
 	npx prettier --check .
 
+.PHONY: typecheck
+# Type-check the TypeScript sources. Node strips type annotations without
+# validating them, so this is the only step that makes the types mean
+# anything — see node-service-guide.md#typescript.
+typecheck:
+	npx tsc --noEmit
+
 .PHONY: check
-# Lint, formatting and security gates
-check: lint formatcheck audit trivy
+# Lint, formatting, type-checking and security gates
+check: lint formatcheck typecheck audit trivy
 
 .PHONY: test
 # Run tests with the built-in node test runner

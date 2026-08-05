@@ -1,14 +1,26 @@
 'use strict';
 
-const test = require('node:test');
-const assert = require('node:assert');
-const { createApp } = require('../src/server');
+import type { CreateApp } from '../src/server';
+
+const test: typeof import('node:test') = require('node:test');
+const assert: typeof import('node:assert') = require('node:assert');
+const { createApp }: { createApp: CreateApp } = require('../src/server.ts');
+
+/** Narrows a `fetch().json()` result before asserting keys on it. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 /** Start the app on an ephemeral port so tests never collide. */
-function withServer(app, fn) {
+function withServer(
+  app: ReturnType<typeof createApp>,
+  fn: (base: string) => Promise<void>,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const server = app.listen(0, '127.0.0.1', async () => {
-      const base = `http://127.0.0.1:${server.address().port}`;
+      const address = server.address();
+      const port = typeof address === 'object' && address !== null ? address.port : 0;
+      const base = `http://127.0.0.1:${port}`;
       try {
         await fn(base);
         resolve();
@@ -55,6 +67,7 @@ test('liveness stays ok even when readiness fails', async () => {
 test('version exposes build metadata', async () => {
   await withServer(createApp(), async (base) => {
     const body = await (await fetch(`${base}/version`)).json();
+    if (!isRecord(body)) throw new Error('expected /version to respond with a JSON object');
     for (const key of ['version', 'commit', 'date']) assert.ok(key in body);
   });
 });
