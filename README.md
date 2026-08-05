@@ -38,7 +38,8 @@ curl localhost:8080/metrics
 | ---------------- | -------------------------------------------------------------------------------- |
 | `make precommit` | `install format test check` — run before every commit                            |
 | `make test`      | `node --test` (built-in runner, no test framework dependency)                    |
-| `make check`     | eslint + prettier + `npm audit` + trivy                                          |
+| `make check`     | eslint + prettier + `typecheck` + `npm audit` + trivy                            |
+| `make typecheck` | `tsc --noEmit` — the only step that validates types, since Node strips them      |
 | `make audit`     | npm advisory database, fails on high/critical                                    |
 | `make trivy`     | filesystem scan: dependency vulns + secret detection                             |
 | `make format`    | rewrite with prettier, autofix eslint                                            |
@@ -51,11 +52,11 @@ curl localhost:8080/metrics
 ## Layout
 
 ```
-src/index.js            entrypoint: listen, signals, graceful shutdown
-src/server.js           express app, metrics middleware, error handling
-src/config.js           env -> config, validated at startup
-src/log.js              JSON-line logger
-src/handlers/health.js  /healthz, /readiness, /version
+src/index.ts            entrypoint: listen, signals, graceful shutdown
+src/server.ts           express app, metrics middleware, error handling
+src/config.ts           env -> config, validated at startup
+src/log.ts              JSON-line logger
+src/handlers/health.ts  /healthz, /readiness, /version
 test/                   node:test, no framework
 k8s/                    deployment + service, applied by `make apply`
 ```
@@ -104,3 +105,7 @@ Kafka, Sentry and a database layer are in the Go and Python skeletons but left o
 ## Why Node at all
 
 Node earns its place where the ecosystem is the reason: `@discordjs/voice` for Discord audio, for instance. For a plain service, prefer Go. This skeleton exists so that when Node _is_ the right answer, the service still behaves like everything else in the fleet.
+
+## License
+
+See the [LICENSE](./LICENSE) file for details.

@@ -6,7 +6,9 @@ Instructions for working on `bborbe/node-skeleton`.
 
 The reference Node.js microservice. New Node services are cloned from here, so **every change to this repo propagates to every service created afterwards**. Treat conventions here as load-bearing rather than local preference.
 
-Stack: Node 22+, CommonJS, express 5, `prom-client`, the built-in `node:test` runner, eslint 9 flat config plus prettier. Deployed as a container to Kubernetes.
+Stack: Node 22+, CommonJS TypeScript, express 5, `prom-client`, the built-in `node:test` runner, eslint 9 flat config plus prettier. Deployed as a container to Kubernetes.
+
+Sources are `.ts`, run directly via Node's native type-stripping — no build step, no `dist/`. `tsconfig.json` is `strict` + `noUncheckedIndexedAccess` + `erasableSyntaxOnly`; only erasable syntax is allowed (no `enum`, `namespace`, constructor parameter properties, decorators), and no `any`, `as`, `!`, or `@ts-ignore` in source. `make check` runs `tsc --noEmit` as `typecheck` — type-stripping alone does not validate types, so this is the only gate that makes the types mean anything.
 
 ## Coding Guidelines
 
@@ -25,22 +27,23 @@ Installed as the `coding` Claude Code plugin; the rules are enforced by `node-qu
 
 These exist for reasons that are not visible from the code alone. The comments in the source explain each one — keep them when editing.
 
-- **Readiness is set false BEFORE `server.close()`** (`src/index.js`). Kubernetes removes the pod from Service endpoints and sends SIGTERM concurrently, not in sequence. Closing the listener first refuses connections routed in during that window, producing reset errors on every deploy.
+- **Readiness is set false BEFORE `server.close()`** (`src/index.ts`). Kubernetes removes the pod from Service endpoints and sends SIGTERM concurrently, not in sequence. Closing the listener first refuses connections routed in during that window, producing reset errors on every deploy.
 - **Readiness failure returns 503, not 500.** 503 makes Kubernetes drain; 500 reads as an application fault and, combined with a liveness probe, escalates into a restart loop.
 - **`/healthz` must never touch an external dependency.** A liveness failure restarts the pod, so a dependency check there converts a downstream blip into a full restart of every replica.
 - **The shutdown timer is `unref()`d.** A referenced timer keeps the event loop alive for its full duration, so a fast shutdown would still take the maximum grace period — multiplied across every pod on a rolling deploy.
-- **404s bucket into a `unmatched` metric label** (`src/server.js`). `req.route?.path` is undefined for unmatched requests; using the raw path gives unbounded Prometheus label cardinality, and a single crawler can exhaust the scrape target.
-- **`error`/`warn` go to stderr, `info`/`debug` to stdout** (`src/log.js`). Preserves `kubectl logs` stream separation.
+- **404s bucket into a `unmatched` metric label** (`src/server.ts`). `req.route?.path` is undefined for unmatched requests; using the raw path gives unbounded Prometheus label cardinality, and a single crawler can exhaust the scrape target.
+- **`error`/`warn` go to stderr, `info`/`debug` to stdout** (`src/log.ts`). Preserves `kubectl logs` stream separation.
 - **`terminationGracePeriodSeconds` (30) must exceed `SHUTDOWN_TIMEOUT_MS` (10000).** Otherwise the pod is SIGKILLed mid-drain and the whole graceful-shutdown path is wasted.
 - **Prometheus scrapes via pod annotations**, not `ServiceMonitor` — `prometheus.io/scrape` + `port` + `path` in `k8s/skeleton-deploy.yaml`. Removing `/metrics` without removing the annotations produces silent scrape errors; the reverse means metrics are computed and never collected.
+- **`moduleResolution: "bundler"` paired with `module: "commonjs"`** (`tsconfig.json`). Node's native type-stripping resolves imports/requires directly against the filesystem with explicit extensions, which `bundler` resolution matches; `node`/`node16`/`nodenext` fought the explicit `.ts`-extension `require()` calls this repo needs since there's no build step to rewrite them.
 
 ## Build and Test
 
 ```bash
 make precommit    # install format test check — run before every commit
 make test         # node --test
-make check        # lint formatcheck audit trivy
-make run          # node src/index.js
+make check        # lint formatcheck typecheck audit trivy
+make run          # node src/index.ts
 ```
 
 `install` uses `npm ci`, never `npm install` — the lockfile is the build input.

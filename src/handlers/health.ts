@@ -1,7 +1,15 @@
 'use strict';
 
-const express = require('express');
-const config = require('../config');
+import type { Config } from '../config';
+
+const express: typeof import('express') = require('express');
+const config: Config = require('../config.ts');
+
+export interface HealthRouterOptions {
+  isReady?: () => boolean;
+}
+
+export type HealthRouter = (options?: HealthRouterOptions) => import('express').Router;
 
 /**
  * Liveness and readiness are DIFFERENT questions, and conflating them causes
@@ -16,7 +24,7 @@ const config = require('../config');
  *                removes it from the Service endpoints. Dependency checks
  *                belong here, and here only.
  */
-function healthRouter({ isReady = () => true } = {}) {
+function healthRouter({ isReady = () => true }: HealthRouterOptions = {}) {
   const router = express.Router();
 
   router.get('/healthz', (_req, res) => {

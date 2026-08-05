@@ -16,7 +16,7 @@ install:
 .PHONY: run
 # Run the application
 run:
-	node src/index.js
+	node src/index.ts
 
 .PHONY: clean-local
 # Clean build artifacts (local)
