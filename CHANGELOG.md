@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.1.0
 
 - feat: Convert the skeleton from CommonJS JavaScript to CommonJS TypeScript — strict `tsconfig.json` (`noUncheckedIndexedAccess`), a `typecheck` target (`tsc --noEmit`) wired into `make check`, erasable-syntax-only sources so `node src/index.ts` runs with no build step, and startup-validated config (`config.check()`) instead of a type assertion
 - docs: Add `CLAUDE.md` — coding-guideline pointers, the non-obvious invariants behind the shutdown/health/metrics code, and the propagation warning that every new service inherits from this repo
